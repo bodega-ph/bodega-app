@@ -1,0 +1,182 @@
+// Prisma schema for Bodega MVP
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MembershipRole {
+  ORG_ADMIN
+  ORG_USER
+}
+
+enum SystemRole {
+  USER
+  SYSTEM_ADMIN
+}
+
+enum MovementType {
+  RECEIVE
+  ISSUE
+  ADJUSTMENT
+}
+
+model User {
+  id            String       @id @default(cuid())
+  name          String?
+  email         String?      @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  systemRole    SystemRole   @default(USER)
+
+  accounts      Account[]
+  sessions      Session[]
+  memberships   Membership[]
+  movements     Movement[]   @relation("MovementCreatedBy")
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Organization {
+  id            String        @id @default(cuid())
+  name          String
+  slug          String?       @unique
+  isActive      Boolean       @default(true)
+
+  memberships   Membership[]
+  items         Item[]
+  locations     Location[]
+  movements     Movement[]
+  currentStock  CurrentStock[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Membership {
+  id            String        @id @default(cuid())
+  userId        String
+  orgId         String
+  role          MembershipRole @default(ORG_USER)
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization  Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([userId, orgId])
+}
+
+model Location {
+  id            String        @id @default(cuid())
+  orgId         String
+  name          String
+  isDefault     Boolean       @default(false)
+
+  organization  Organization  @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  movements     Movement[]
+  currentStock  CurrentStock[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([orgId, name])
+}
+
+model Item {
+  id                String        @id @default(cuid())
+  orgId             String
+  name              String
+  sku               String
+  unit              String
+  category          String?
+  isActive          Boolean       @default(true)
+  lowStockThreshold Decimal?      @db.Decimal(12, 2)
+
+  organization      Organization  @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  movements         Movement[]
+  currentStock      CurrentStock[]
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@unique([orgId, sku])
+}
+
+model Movement {
+  id            String       @id @default(cuid())
+  orgId         String
+  itemId        String
+  locationId    String
+  createdById   String
+  type          MovementType
+  quantity      Decimal      @db.Decimal(12, 2)
+  reason        String?
+
+  organization  Organization @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  item          Item         @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  location      Location     @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  createdBy     User         @relation("MovementCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  createdAt     DateTime     @default(now())
+
+  @@index([orgId, itemId, createdAt])
+}
+
+model CurrentStock {
+  id            String       @id @default(cuid())
+  orgId         String
+  itemId        String
+  locationId    String
+  quantity      Decimal      @default(0) @db.Decimal(12, 2)
+
+  organization  Organization @relation(fields: [orgId], references: [id], onDelete: Restrict)
+  item          Item         @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  location      Location     @relation(fields: [locationId], references: [id], onDelete: Restrict)
+
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([orgId, itemId, locationId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
