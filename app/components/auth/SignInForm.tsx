@@ -41,8 +41,8 @@ export default function SignInForm() {
 
   return (
     <div className="w-full">
-      <div className="mb-10 text-center">
-        <h2 className="text-3xl font-bold text-white tracking-tight mb-3">
+      <div className="mb-8 text-center">
+        <h2 className="text-2xl font-semibold text-white tracking-tight mb-2">
           Sign in to Bodega
         </h2>
         <p className="text-sm font-medium text-zinc-400">
@@ -51,32 +51,32 @@ export default function SignInForm() {
       </div>
 
       {error && (
-        <div className="mb-8 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-200 rounded-xl text-sm flex items-center shadow-sm">
+        <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-200 rounded-lg text-sm flex items-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
           <span className="font-semibold mr-2">Error:</span> {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2.5">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-2">
           <label className="block text-sm font-medium text-zinc-300">
             Email address
           </label>
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500 group-focus-within:text-blue-500 transition-colors duration-300">
-              <Mail className="h-5 w-5" />
+              <Mail className="h-4 w-4" />
             </div>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="block w-full pl-11 pr-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-zinc-900/80 transition-all duration-300 shadow-sm hover:border-white/20"
+              className="block w-full pl-10 pr-4 py-2.5 bg-zinc-900/40 border border-white/10 rounded-lg text-sm text-white placeholder-zinc-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-zinc-900 transition-all duration-300 hover:border-white/20"
               placeholder="operator@company.com"
             />
           </div>
         </div>
 
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="block text-sm font-medium text-zinc-300">
               Password
@@ -87,14 +87,14 @@ export default function SignInForm() {
           </div>
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500 group-focus-within:text-blue-500 transition-colors duration-300">
-              <Lock className="h-5 w-5" />
+              <Lock className="h-4 w-4" />
             </div>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="block w-full pl-11 pr-4 py-3 bg-zinc-900/50 border border-white/10 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-zinc-900/80 transition-all duration-300 shadow-sm hover:border-white/20"
+              className="block w-full pl-10 pr-4 py-2.5 bg-zinc-900/40 border border-white/10 rounded-lg text-sm text-white placeholder-zinc-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-zinc-900 transition-all duration-300 hover:border-white/20"
               placeholder="••••••••••••"
             />
           </div>
@@ -103,7 +103,7 @@ export default function SignInForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 py-3 px-4 border border-transparent rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-950 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-300 mt-8 shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_25px_rgba(37,99,235,0.4)]"
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-zinc-950 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-300 mt-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0_20px_rgba(37,99,235,0.2)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0_25px_rgba(37,99,235,0.4)]"
         >
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -120,7 +120,7 @@ export default function SignInForm() {
         <div className="mt-8">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10"></div>
+              <div className="w-full border-t border-white/5"></div>
             </div>
             <div className="relative flex justify-center text-xs">
               <span className="px-3 bg-zinc-950 text-zinc-500 font-medium tracking-wide uppercase">
@@ -131,9 +131,9 @@ export default function SignInForm() {
 
           <button
             onClick={() => signIn("google", { callbackUrl: "/" })}
-            className="mt-8 w-full flex justify-center items-center py-3 px-4 border border-white/10 rounded-xl bg-zinc-900/50 hover:bg-zinc-800 hover:border-white/20 text-sm font-medium text-zinc-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-600 focus:ring-offset-zinc-950 transition-all duration-300"
+            className="mt-6 w-full flex justify-center items-center py-2.5 px-4 border border-white/5 rounded-lg bg-zinc-900/30 hover:bg-zinc-800/80 hover:border-white/10 text-sm font-medium text-zinc-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-600 focus:ring-offset-zinc-950 transition-all duration-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]"
           >
-            <svg className="w-5 h-5 mr-2.5" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
@@ -144,7 +144,7 @@ export default function SignInForm() {
         </div>
       )}
 
-      <div className="mt-10 text-center">
+      <div className="mt-8 text-center">
         <p className="text-sm text-zinc-400">
           Don&apos;t have an account?{" "}
           <Link
