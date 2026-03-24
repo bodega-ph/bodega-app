@@ -1,46 +1,14 @@
-import { prisma } from "@/lib/db";
 import Link from "next/link";
+import { getDashboardData } from "@/features/dashboard/server";
+import type { RecentMovement, LowStockItem } from "@/features/dashboard/server";
 
-function formatQuantity(quantity: any) {
-  if (!quantity) return "0";
-  return quantity.toString();
+function formatQuantity(quantity: string) {
+  return quantity || "0";
 }
 
 export default async function DashboardPage({ params }: { params: Promise<{ orgId: string }> }) {
   const { orgId } = await params;
-
-  const org = await prisma.organization.findUnique({ where: { id: orgId } });
-  const activeOrgName = org?.name ?? "Command Center";
-
-  // Parallel data fetching
-  const [
-    totalItems,
-    totalMovements,
-    totalLocations,
-    recentActivity,
-    allStock,
-  ] = await Promise.all([
-    prisma.item.count({ where: { orgId } }),
-    prisma.movement.count({ where: { orgId } }),
-    prisma.location.count({ where: { orgId } }),
-    prisma.movement.findMany({
-      where: { orgId },
-      take: 5,
-      orderBy: { createdAt: "desc" },
-      include: { item: true, location: true },
-    }),
-    prisma.currentStock.findMany({
-      where: { orgId },
-      include: { item: true, location: true },
-    }),
-  ]);
-
-  // Filter low stock in memory
-  const lowStock = allStock.filter((stock) => {
-    const qty = Number(stock.quantity);
-    const threshold = stock.item.lowStockThreshold ? Number(stock.item.lowStockThreshold) : 0;
-    return qty <= threshold;
-  });
+  const { orgName, stats, recentActivity, lowStock } = await getDashboardData(orgId);
 
   const dateFormatter = new Intl.DateTimeFormat("en-US", {
     month: "short",
@@ -52,15 +20,15 @@ export default async function DashboardPage({ params }: { params: Promise<{ orgI
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium text-white tracking-tight">{activeOrgName}</h1>
+        <h1 className="text-xl font-medium text-white tracking-tight">{orgName}</h1>
       </div>
 
       {/* Top KPIs Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: "Total Items", value: totalItems },
-          { label: "Total Movements", value: totalMovements },
-          { label: "Active Locations", value: totalLocations },
+          { label: "Total Items", value: stats.totalItems },
+          { label: "Total Movements", value: stats.totalMovements },
+          { label: "Active Locations", value: stats.totalLocations },
         ].map((stat, i) => (
           <div
             key={i}
@@ -97,7 +65,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ orgI
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-zinc-300">
-                  {recentActivity.map((movement) => (
+                  {recentActivity.map((movement: RecentMovement) => (
                     <tr key={movement.id} className="hover:bg-white/[0.02] transition-colors group">
                       <td className="px-5 py-3">
                         <span className="inline-flex items-center gap-2">
@@ -163,7 +131,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ orgI
                 </div>
               ) : (
                 <ul className="divide-y divide-white/5">
-                  {lowStock.map((stock) => (
+                  {lowStock.map((stock: LowStockItem) => (
                     <li key={stock.id} className="p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
                       <div className="flex flex-col">
                         <span className="text-sm text-white font-medium">{stock.item.name}</span>
@@ -174,7 +142,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ orgI
                           {formatQuantity(stock.quantity)}
                         </span>
                         <span className="text-xs text-zinc-500">
-                          Min: {formatQuantity(stock.item.lowStockThreshold || 0)}
+                          Min: {formatQuantity(stock.item.lowStockThreshold)}
                         </span>
                       </div>
                     </li>

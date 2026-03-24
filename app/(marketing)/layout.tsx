@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import MarketingNav from "@/app/components/marketing/MarketingNav";
-import Footer from "@/app/components/marketing/Footer";
+import { Footer, MarketingNav } from "@/features/marketing";
 
 export default async function MarketingLayout({
   children,

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { createOrg } from "@/lib/actions/org";
+import { createOrg } from "@/features/organizations/actions/org";
 import { Building2 } from "lucide-react";
 
 function SubmitButton() {

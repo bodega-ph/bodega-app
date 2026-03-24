@@ -1,2 +1,2 @@
-import { redirectToOrgScopedPath } from '@/app/components/app/redirectHelper';
+import { redirectToOrgScopedPath } from '@/lib/redirect-helper';
 export default async function Page() { await redirectToOrgScopedPath('dashboard'); }

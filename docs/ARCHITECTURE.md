@@ -31,21 +31,38 @@ Browser
 ```
 bodega-app/
   app/
-    (auth)/
+    (marketing)/
     (app)/
     api/
+    auth/
+    components/
+      ui/
+      layout/
     layout.tsx
     page.tsx
     globals.css
+  src/
+    features/
+      account/
+      inventory/
+      items/
+      locations/
+      movements/
+      organizations/
+        actions/
+        api/
+        components/
+        types.ts
+        index.ts
   lib/
     auth.ts
     db.ts
+    api-auth.ts
   prisma/
     schema.prisma
     migrations/
   public/
   types/
-  scripts/
   docs/
     BODEGA_MVP.md
     ARCHITECTURE.md
@@ -59,6 +76,7 @@ bodega-app/
 ---
 
 **Key Technical Decisions**
+- Feature-Driven Architecture encapsulating domain logic, API functions, actions, and components inside `src/features/<domain>`.
 - Single Next.js app for UI + API to keep MVP delivery fast and consistent.
 - Postgres as system of record with transactions for inventory correctness.
 - Ledger-based movements with derived current stock for fast reads.
