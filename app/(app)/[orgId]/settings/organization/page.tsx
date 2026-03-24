@@ -1,9 +1,9 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getMembers } from "@/features/organizations/server";
+import { MemberList, OrganizationSettingsForm } from "@/features/organizations";
 import { prisma } from "@/lib/db";
-import OrganizationSettingsForm from "@/app/components/app/OrganizationSettingsForm";
-import MemberList from "@/app/components/app/MemberList";
 
 export const metadata = {
   title: "Organization Settings - Bodega",
@@ -24,12 +24,10 @@ export default async function OrganizationSettingsPage({
 
   const userId = (session.user as any).id;
 
-  // Fetch all user memberships
+  // Fetch all user memberships (needed for isLastOrg check and role validation)
   const memberships = await prisma.membership.findMany({
     where: { userId },
-    include: {
-      organization: true,
-    },
+    include: { organization: true },
   });
 
   if (memberships.length === 0) {
@@ -47,24 +45,8 @@ export default async function OrganizationSettingsPage({
     redirect("/account/settings");
   }
 
-  // Fetch organization members
-  const members = await prisma.membership.findMany({
-    where: {
-      orgId: orgId,
-    },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-    },
-    orderBy: {
-      role: "desc", // ORG_ADMIN first
-    },
-  });
+  // Fetch organization members via feature server module
+  const members = await getMembers(orgId);
 
   return (
     <div className="min-h-screen bg-zinc-950 p-8">
@@ -96,12 +78,7 @@ export default async function OrganizationSettingsPage({
               </div>
             </div>
             <MemberList
-              members={members.map((m) => ({
-                id: m.user.id,
-                name: m.user.name,
-                email: m.user.email,
-                role: m.role,
-              }))}
+              members={members}
             />
           </div>
         </div>

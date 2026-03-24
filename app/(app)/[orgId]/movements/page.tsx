@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/db";
-import MovementList from "@/app/components/app/MovementList";
-import MovementFilters from "@/app/components/app/MovementFilters";
+import { MovementFilters, MovementList } from "@/features/movements";
+import { getMovements } from "@/features/movements/server";
+import { getItems } from "@/features/items/server";
 
 interface PageProps {
   params: Promise<{ orgId: string }>;
@@ -9,55 +9,18 @@ interface PageProps {
 
 export default async function MovementsPage({ params, searchParams }: PageProps) {
   const { orgId } = await params;
-
   const queryParams = await searchParams;
 
   const itemId = typeof queryParams.itemId === "string" ? queryParams.itemId : undefined;
-  const from = typeof queryParams.from === "string" ? queryParams.from : undefined;
-  const to = typeof queryParams.to === "string" ? queryParams.to : undefined;
+  const from = typeof queryParams.from === "string" ? new Date(queryParams.from) : undefined;
+  const to = typeof queryParams.to === "string" ? new Date(queryParams.to) : undefined;
   const page = Math.max(1, parseInt((queryParams.page as string) ?? "1", 10));
   const limit = 50;
-  const skip = (page - 1) * limit;
 
-  const where = {
-    orgId,
-    ...(itemId ? { itemId } : {}),
-    ...(from || to
-      ? {
-          createdAt: {
-            ...(from ? { gte: new Date(from) } : {}),
-            ...(to ? { lte: new Date(to) } : {}),
-          },
-        }
-      : {}),
-  };
-
-  const [movements, total, items] = await Promise.all([
-    prisma.movement.findMany({
-      where,
-      select: {
-        id: true,
-        type: true,
-        quantity: true,
-        reason: true,
-        createdAt: true,
-        item: { select: { id: true, name: true, sku: true, unit: true } },
-        location: { select: { id: true, name: true } },
-        createdBy: { select: { id: true, name: true, email: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: limit,
-    }),
-    prisma.movement.count({ where }),
-    prisma.item.findMany({
-      where: { orgId, isActive: true },
-      select: { id: true, name: true, sku: true },
-      orderBy: { name: "asc" },
-    }),
+  const [movementsData, items] = await Promise.all([
+    getMovements(orgId, { itemId, from, to, page, limit }),
+    getItems(orgId),
   ]);
-
-  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="min-h-screen">
@@ -76,17 +39,8 @@ export default async function MovementsPage({ params, searchParams }: PageProps)
 
           <div className="w-full">
             <MovementList
-              movements={movements.map((m) => ({
-                ...m,
-                quantity: m.quantity.toString(),
-                createdAt: m.createdAt.toISOString(),
-              }))}
-              pagination={{
-                page,
-                limit,
-                total,
-                totalPages,
-              }}
+              movements={movementsData.movements as any}
+              pagination={movementsData.pagination}
             />
           </div>
         </div>

@@ -1,18 +1,9 @@
-import LocationList from "@/app/components/app/LocationList";
-import { prisma } from "@/lib/db";
+import { LocationList } from "@/features/locations";
+import { getLocations } from "@/features/locations/server";
 
 export default async function LocationsPage({ params }: { params: Promise<{ orgId: string }> }) {
   const { orgId } = await params;
-
-  const locations = await prisma.location.findMany({
-    where: { orgId },
-    select: {
-      id: true,
-      name: true,
-      isDefault: true,
-    },
-    orderBy: [{ isDefault: "desc" }, { name: "asc" }],
-  });
+  const locations = await getLocations(orgId);
 
   return (
     <div className="space-y-6">

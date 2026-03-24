@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
-import AmbientBackground from "@/app/components/auth/AmbientBackground";
+import { AmbientBackground } from "@/features/auth";
 
 export default async function AuthLayout({
   children,
