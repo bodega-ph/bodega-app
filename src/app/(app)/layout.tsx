@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import AppSidebar from "@/components/layout/AppSidebar";
 import AppHeader from "@/components/layout/AppHeader";
+import type { MembershipRole } from "@prisma/client";
 
 export const dynamic = 'force-dynamic';
 
@@ -45,12 +46,17 @@ export default async function AppLayout({
   }
 
   // Build orgs list with roles
-  const userOrgs = memberships.map((m) => ({
-    id: m.organization.id,
-    name: m.organization.name,
-    slug: m.organization.slug,
-    role: m.role,
-  }));
+  const userOrgs = memberships.map(
+    (m: {
+      organization: { id: string; name: string; slug: string | null };
+      role: MembershipRole;
+    }) => ({
+      id: m.organization.id,
+      name: m.organization.name,
+      slug: m.organization.slug,
+      role: m.role,
+    }),
+  );
 
   // Determine active org from URL if present, fallback to session
   let activeOrgId = session.user.activeOrgId;
