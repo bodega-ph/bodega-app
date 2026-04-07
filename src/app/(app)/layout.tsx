@@ -8,6 +8,13 @@ import AppHeader from "@/components/layout/AppHeader";
 
 export const dynamic = 'force-dynamic';
 
+type UserOrg = {
+  id: string;
+  name: string;
+  slug: string | null;
+  role: "ORG_ADMIN" | "ORG_USER";
+};
+
 export default async function AppLayout({
   children,
 }: {
@@ -45,7 +52,7 @@ export default async function AppLayout({
   }
 
   // Build orgs list with roles
-  const userOrgs = memberships.map(
+  const userOrgs: UserOrg[] = memberships.map(
     (m: {
       organization: { id: string; name: string; slug: string | null };
       role: "ORG_ADMIN" | "ORG_USER";
