@@ -30,7 +30,7 @@ export default async function OrgLayout({
     redirect("/onboarding/create-org");
   }
 
-  const userOrgIds = memberships.map((m) => m.orgId);
+  const userOrgIds = memberships.map((m: { orgId: string }) => m.orgId);
 
   // Validate that user is a member of the requested org
   if (!userOrgIds.includes(orgId)) {
