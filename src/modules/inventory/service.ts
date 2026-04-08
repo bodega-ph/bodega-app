@@ -11,14 +11,30 @@ import type { InventoryPageData, InventoryRow } from "./types";
 
 export type { InventoryPageData, InventoryRow } from "./types";
 
-export async function getInventory(orgId: string): Promise<InventoryPageData> {
-  const [rawInventory, items, locations] = await Promise.all([
-    repo.listCurrentStock(orgId),
-    getItemsForSelect(orgId),
-    getLocationsForSelect(orgId),
-  ]);
+export type PaginatedInventoryResponse = {
+  inventory: InventoryRow[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+};
 
-  const inventory: InventoryRow[] = rawInventory.map((row) => ({
+function toInventoryRow(row: {
+  id: string;
+  quantity: { toString(): string };
+  item: {
+    id: string;
+    name: string;
+    sku: string;
+    unit: string;
+    category: string | null;
+    lowStockThreshold: { toString(): string } | null;
+  };
+  location: { id: string; name: string };
+}): InventoryRow {
+  return {
     id: row.id,
     quantity: row.quantity.toString(),
     item: {
@@ -26,9 +42,41 @@ export async function getInventory(orgId: string): Promise<InventoryPageData> {
       lowStockThreshold: row.item.lowStockThreshold?.toString() ?? null,
     },
     location: row.location,
-  }));
+  };
+}
+
+export async function getInventory(orgId: string): Promise<InventoryPageData> {
+  const [rawInventory, items, locations] = await Promise.all([
+    repo.listCurrentStock(orgId),
+    getItemsForSelect(orgId),
+    getLocationsForSelect(orgId),
+  ]);
+
+  const inventory: InventoryRow[] = rawInventory.map(toInventoryRow);
 
   return { inventory, items, locations };
+}
+
+/**
+ * Get a single page of inventory rows with DB-level pagination.
+ * Prefer this over getInventory() in API routes.
+ */
+export async function getInventoryPage(
+  orgId: string,
+  page: number,
+  limit: number,
+): Promise<PaginatedInventoryResponse> {
+  const { rows, total } = await repo.listCurrentStockPage(orgId, page, limit);
+
+  return {
+    inventory: rows.map(toInventoryRow),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 }
 
 /**
@@ -48,18 +96,12 @@ export async function getLowStockItems(orgId: string): Promise<InventoryRow[]> {
   return stock
     .filter((row) => {
       const qty = Number(row.quantity);
-      const threshold = row.item.lowStockThreshold ? Number(row.item.lowStockThreshold) : 0;
-      return qty <= threshold;
+      const threshold = row.item.lowStockThreshold
+        ? Number(row.item.lowStockThreshold)
+        : 0;
+      return threshold > 0 && qty <= threshold;
     })
-    .map((row) => ({
-      id: row.id,
-      quantity: row.quantity.toString(),
-      item: {
-        ...row.item,
-        lowStockThreshold: row.item.lowStockThreshold?.toString() ?? null,
-      },
-      location: row.location,
-    }));
+    .map(toInventoryRow);
 }
 
 /**
@@ -67,7 +109,7 @@ export async function getLowStockItems(orgId: string): Promise<InventoryRow[]> {
  */
 export async function generateInventoryCsvExport(
   orgId: string,
-  limit?: number
+  limit?: number,
 ): Promise<CsvExportResult> {
   const [rows, orgName] = await Promise.all([
     repo.getInventoryForExport(orgId, limit),

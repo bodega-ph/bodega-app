@@ -29,15 +29,21 @@ export default function SignUpForm() {
 
       if (!res.ok) {
         // Handle string errors or extract message from error objects
-        const errorMessage = typeof data.error === 'string' 
-          ? data.error 
-          : data.error?.message || "Unable to create account. Please try again.";
+        const errorMessage =
+          typeof data.error === "string"
+            ? data.error
+            : data.error?.message ||
+              "Unable to create account. Please try again.";
         throw new Error(errorMessage);
       }
 
       router.push("/auth/signin?registered=true");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to create account. Please try again.",
+      );
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,49 @@
 import { prisma } from "@/lib/db";
 import type { InventoryExportRow } from "./csv-generator";
 
+export async function listCurrentStockPage(
+  orgId: string,
+  page: number,
+  limit: number,
+) {
+  const skip = (page - 1) * limit;
+
+  const [rows, total] = await Promise.all([
+    prisma.currentStock.findMany({
+      where: { orgId },
+      select: {
+        id: true,
+        quantity: true,
+        updatedAt: true,
+        item: {
+          select: {
+            id: true,
+            name: true,
+            sku: true,
+            unit: true,
+            category: true,
+            lowStockThreshold: true,
+          },
+        },
+        location: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        item: { name: "asc" },
+      },
+      skip,
+      take: limit,
+    }),
+    prisma.currentStock.count({ where: { orgId } }),
+  ]);
+
+  return { rows, total };
+}
+
 export async function listCurrentStock(orgId: string) {
   return prisma.currentStock.findMany({
     where: { orgId },
@@ -44,7 +87,7 @@ export async function countStock(orgId: string): Promise<number> {
  */
 export async function getInventoryForExport(
   orgId: string,
-  limit: number = 10000
+  limit: number = 10000,
 ): Promise<InventoryExportRow[]> {
   const items = await prisma.currentStock.findMany({
     where: { orgId },

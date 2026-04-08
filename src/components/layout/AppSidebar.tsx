@@ -8,11 +8,10 @@ import {
   ArrowLeftRight,
   MapPin,
   Boxes,
-  Settings,
   ChevronDown,
   Building2,
   Check,
-  Plus
+  Plus,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -34,9 +33,7 @@ interface AppSidebarProps {
 const navGroups = [
   {
     header: "CORE",
-    items: [
-      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    ]
+    items: [{ label: "Dashboard", href: "/dashboard", icon: LayoutDashboard }],
   },
   {
     header: "INVENTORY",
@@ -45,14 +42,14 @@ const navGroups = [
       { label: "Stock", href: "/inventory", icon: Package },
       { label: "Movements", href: "/movements", icon: ArrowLeftRight },
       { label: "Locations", href: "/locations", icon: MapPin },
-    ]
+    ],
   },
   {
     header: "SYSTEM",
     items: [
       { label: "Settings", href: "/settings/organization", icon: Building2 },
-    ]
-  }
+    ],
+  },
 ];
 
 export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
@@ -72,7 +69,10 @@ export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
   // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOrgSwitcherOpen(false);
       }
     }
@@ -91,15 +91,21 @@ export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
       const result = await switchOrg(orgId);
       if (result.success) {
         await update({ activeOrgId: orgId });
-        const currentPath = pathname.replace(new RegExp(`^/${activeOrg.id}`), "");
+        const currentPath = pathname.replace(
+          new RegExp(`^/${activeOrg.id}`),
+          "",
+        );
+        // Hard navigation is intentional: ensures the updated JWT (activeOrgId)
+        // is fully propagated before the next page renders.
+        // eslint-disable-next-line react-hooks/immutability
         window.location.href = `/${orgId}${currentPath}`;
       } else {
         console.error("Failed to switch org:", result.error);
         setIsSwitching(false);
         setIsOrgSwitcherOpen(false);
       }
-    } catch (error) {
-      console.error("Error switching org:", error);
+    } catch {
+      console.error("Error switching org");
       setIsSwitching(false);
       setIsOrgSwitcherOpen(false);
     }
@@ -113,19 +119,19 @@ export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
     try {
       const formData = new FormData();
       formData.append("name", newOrgName);
-      
+
       const result = await createOrg(formData);
-      
+
       if (result.success) {
         // Switch to new org
         await update({ activeOrgId: result.orgId });
         // Use hard navigation to ensure session is fully refreshed
-        window.location.href = "/dashboard";
+        window.location.href = "/";
       } else {
         setCreateError(result.error);
         setIsCreating(false);
       }
-    } catch (error) {
+    } catch {
       setCreateError("An error occurred. Please try again.");
       setIsCreating(false);
     }
@@ -134,7 +140,10 @@ export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
   return (
     <aside className="w-64 shrink-0 h-screen sticky top-0 flex flex-col bg-zinc-950 border-r border-white/5 relative z-50">
       {/* Top Section / Org Switcher */}
-      <div className="h-16 shrink-0 flex items-center px-4 border-b border-white/5 relative" ref={dropdownRef}>
+      <div
+        className="h-16 shrink-0 flex items-center px-4 border-b border-white/5 relative"
+        ref={dropdownRef}
+      >
         <button
           onClick={() => setIsOrgSwitcherOpen(!isOrgSwitcherOpen)}
           disabled={isSwitching}
@@ -142,7 +151,12 @@ export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
         >
           {/* Logo Icon */}
           <div className="relative flex items-center justify-center w-8 h-8 rounded-md bg-zinc-900 border border-white/10 shrink-0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 text-white">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              className="w-4 h-4 text-white"
+            >
               <path
                 d="M5 4h9l6 4.5-4 3.5 4 3.5-6 4.5H5z"
                 strokeWidth="3.5"
@@ -157,9 +171,7 @@ export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
               <p className="text-[13px] font-medium text-white truncate leading-tight">
                 {activeOrg.name}
               </p>
-              <p className="text-[11px] text-zinc-500 font-medium">
-                Bodega
-              </p>
+              <p className="text-[11px] text-zinc-500 font-medium">Bodega</p>
             </div>
             <ChevronDown className="w-4 h-4 text-zinc-500 shrink-0" />
           </div>
@@ -171,7 +183,9 @@ export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
             {userOrgs.length > 1 && (
               <>
                 <div className="px-3 py-2 border-b border-white/5">
-                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Switch Organization</p>
+                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                    Switch Organization
+                  </p>
                 </div>
                 <div className="max-h-60 overflow-y-auto p-1">
                   {userOrgs.map((org) => (
@@ -187,7 +201,9 @@ export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <Building2 className="w-4 h-4 shrink-0 opacity-50" />
-                        <span className="text-[13px] font-medium truncate">{org.name}</span>
+                        <span className="text-[13px] font-medium truncate">
+                          {org.name}
+                        </span>
                       </div>
                       {org.id === activeOrg.id && (
                         <Check className="w-3.5 h-3.5 shrink-0 text-white" />
@@ -198,7 +214,9 @@ export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
               </>
             )}
             {/* Create Organization Button */}
-            <div className={`p-1 ${userOrgs.length > 1 ? 'border-t border-white/5 mt-1' : ''}`}>
+            <div
+              className={`p-1 ${userOrgs.length > 1 ? "border-t border-white/5 mt-1" : ""}`}
+            >
               <button
                 onClick={() => {
                   setShowCreateModal(true);
@@ -207,7 +225,9 @@ export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
                 className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left hover:bg-white/5 text-zinc-300 transition-colors"
               >
                 <Plus className="w-4 h-4 shrink-0" />
-                <span className="text-[13px] font-medium">Create Organization</span>
+                <span className="text-[13px] font-medium">
+                  Create Organization
+                </span>
               </button>
             </div>
           </div>
@@ -218,10 +238,15 @@ export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]">
           <div className="bg-zinc-900 border border-white/10 rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl">
-            <h3 className="text-xl font-bold text-white mb-4">Create Organization</h3>
+            <h3 className="text-xl font-bold text-white mb-4">
+              Create Organization
+            </h3>
             <form onSubmit={handleCreateOrg} className="space-y-4">
               <div>
-                <label htmlFor="orgName" className="block text-sm font-medium text-zinc-300 mb-2">
+                <label
+                  htmlFor="orgName"
+                  className="block text-sm font-medium text-zinc-300 mb-2"
+                >
                   Organization Name
                 </label>
                 <input
@@ -278,13 +303,14 @@ export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
             </h3>
             {group.items.map(({ label, href, icon: Icon }) => {
               const orgHref = `/${activeOrg.id}${href}`;
-              const isActive = pathname === orgHref || pathname.startsWith(`${orgHref}/`);
-              
+              const isActive =
+                pathname === orgHref || pathname.startsWith(`${orgHref}/`);
+
               // Hide Organization Settings for non-admins
               if (href === "/settings/organization" && !isOrgAdmin) {
                 return null;
               }
-              
+
               return (
                 <Link
                   key={href}
@@ -295,7 +321,9 @@ export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
                       : "text-zinc-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-zinc-500"}`} />
+                  <Icon
+                    className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-zinc-500"}`}
+                  />
                   {label}
                 </Link>
               );
@@ -303,7 +331,7 @@ export default function AppSidebar({ activeOrg, userOrgs }: AppSidebarProps) {
           </div>
         ))}
       </nav>
-      
+
       {/* Bottom User Area if needed, or leave clean */}
     </aside>
   );

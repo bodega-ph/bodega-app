@@ -23,7 +23,7 @@ export class IndicatorsRepository {
         locationName: string | null;
       }>
     >`
-    SELECT 
+    SELECT
       cs."itemId",
       cs."quantity",
       i."name",
@@ -53,7 +53,7 @@ export class IndicatorsRepository {
 
   async getLargeOutboundItems(
     orgId: string,
-    days: number
+    days: number,
   ): Promise<LargeOutboundItem[]> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -101,10 +101,11 @@ export class IndicatorsRepository {
       // A 100% result means the issue quantity equals or exceeds current stock.
       const currentQty = issue.item.currentStock.reduce(
         (sum, stock) => sum + Number(stock.quantity),
-        0
+        0,
       );
       const issuedQty = Number(issue.quantity);
-      const percentOfStock = currentQty > 0 ? (issuedQty / currentQty) * 100 : 100;
+      const percentOfStock =
+        currentQty > 0 ? (issuedQty / currentQty) * 100 : 100;
 
       if (percentOfStock >= 50) {
         largeOutbounds.push({
@@ -128,7 +129,7 @@ export class IndicatorsRepository {
   async getFrequentAdjustmentItems(
     orgId: string,
     days: number = 7,
-    minCount: number = 3
+    minCount: number = 3,
   ): Promise<FrequentAdjustmentItem[]> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -148,7 +149,7 @@ export class IndicatorsRepository {
       having: {
         id: {
           _count: {
-            gt: minCount,
+            gte: minCount,
           },
         },
       },

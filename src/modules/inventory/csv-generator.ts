@@ -37,7 +37,7 @@ const CSV_HEADERS = [
  */
 export function generateInventoryCsv(
   rows: InventoryExportRow[],
-  orgName: string
+  orgName: string,
 ): CsvExportResult {
   const csvRows: string[] = [];
 
@@ -78,7 +78,7 @@ export function escapeCsvField(value: string | null | undefined): string {
 
   // CRITICAL: Prevent CSV injection - prefix dangerous chars with apostrophe
   const dangerous = /^[=+\-@\t\r]/;
-  let safe = dangerous.test(normalized) ? `'${normalized}` : normalized;
+  const safe = dangerous.test(normalized) ? `'${normalized}` : normalized;
 
   if (
     safe.includes(",") ||
