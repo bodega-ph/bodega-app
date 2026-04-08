@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MoreHorizontal, Star, MapPin, Edit2, Trash2, CheckCircle, Plus } from "lucide-react";
+import { Star, MapPin, Edit2, Trash2, CheckCircle, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import LocationForm from "./LocationForm";
@@ -39,7 +39,9 @@ export default function LocationList({ initialLocations }: LocationListProps) {
     };
 
     if (response.status === 403) {
-      setInlineError(data.error ?? "You do not have access to this organization");
+      setInlineError(
+        data.error ?? "You do not have access to this organization",
+      );
       return;
     }
 
@@ -67,10 +69,14 @@ export default function LocationList({ initialLocations }: LocationListProps) {
       return;
     }
 
-    const data = (await response.json().catch(() => ({}))) as { error?: string };
+    const data = (await response.json().catch(() => ({}))) as {
+      error?: string;
+    };
 
     if (response.status === 403) {
-      setInlineError(data.error ?? "You do not have access to this organization");
+      setInlineError(
+        data.error ?? "You do not have access to this organization",
+      );
       return;
     }
 
@@ -87,12 +93,14 @@ export default function LocationList({ initialLocations }: LocationListProps) {
       <div className="rounded-lg bg-zinc-900/30 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-white tracking-tight">Locations</h2>
+            <h2 className="text-xl font-semibold text-white tracking-tight">
+              Locations
+            </h2>
             <p className="mt-1.5 text-sm text-zinc-500">
               Manage warehouses, shelves, and bins for your organization.
             </p>
           </div>
-          <Button 
+          <Button
             onClick={() => setCreateOpen(true)}
             className="rounded-md bg-blue-600 hover:bg-blue-500 text-white shadow-none border-0 transition-colors flex items-center gap-2"
           >
@@ -114,11 +122,14 @@ export default function LocationList({ initialLocations }: LocationListProps) {
               <div className="h-14 w-14 rounded-md bg-blue-500/10 flex items-center justify-center mb-5 border border-blue-500/20">
                 <MapPin className="h-6 w-6 text-blue-400" />
               </div>
-              <h3 className="text-lg font-medium text-zinc-200 tracking-tight mb-2">No locations found</h3>
+              <h3 className="text-lg font-medium text-zinc-200 tracking-tight mb-2">
+                No locations found
+              </h3>
               <p className="text-sm text-zinc-500 mb-8 max-w-sm leading-relaxed">
-                Get started by creating your first location to track inventory, shelves, and bins.
+                Get started by creating your first location to track inventory,
+                shelves, and bins.
               </p>
-              <Button 
+              <Button
                 onClick={() => setCreateOpen(true)}
                 className="rounded-md border border-white/5 bg-white/5 hover:bg-white/10 text-white shadow-none"
               >
@@ -128,8 +139,8 @@ export default function LocationList({ initialLocations }: LocationListProps) {
           ) : (
             <div className="grid gap-3">
               {locations.map((location) => (
-                <div 
-                  key={location.id} 
+                <div
+                  key={location.id}
                   className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/[0.03] transition-colors"
                 >
                   <div className="flex items-center gap-4">
@@ -138,7 +149,9 @@ export default function LocationList({ initialLocations }: LocationListProps) {
                     </div>
                     <div>
                       <div className="flex items-center gap-3">
-                        <h3 className="font-medium text-zinc-200 text-base">{location.name}</h3>
+                        <h3 className="font-medium text-zinc-200 text-base">
+                          {location.name}
+                        </h3>
                         {location.isDefault && (
                           <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-blue-400">
                             <Star className="h-3 w-3 fill-blue-400 text-blue-400" />
@@ -146,13 +159,15 @@ export default function LocationList({ initialLocations }: LocationListProps) {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-zinc-500 mt-1 font-mono tracking-tight">ID: {location.id}</p>
+                      <p className="text-xs text-zinc-500 mt-1 font-mono tracking-tight">
+                        ID: {location.id}
+                      </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 mt-4 sm:mt-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 justify-end">
                     {!location.isDefault && (
-                      <button 
+                      <button
                         onClick={() => handleSetDefault(location.id)}
                         className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-white/5 rounded-md transition-colors border border-transparent hover:border-white/5"
                       >
@@ -160,14 +175,14 @@ export default function LocationList({ initialLocations }: LocationListProps) {
                         <span>Make Default</span>
                       </button>
                     )}
-                    <button 
+                    <button
                       onClick={() => setEditTarget(location)}
                       className="p-2 text-zinc-400 hover:text-zinc-200 hover:bg-white/5 rounded-md transition-colors border border-transparent hover:border-white/5"
                       title="Edit location"
                     >
                       <Edit2 className="h-4 w-4" />
                     </button>
-                    <button 
+                    <button
                       onClick={() => setDeleteTarget(location)}
                       className="p-2 text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-md transition-colors border border-transparent hover:border-rose-500/20"
                       title="Delete location"
