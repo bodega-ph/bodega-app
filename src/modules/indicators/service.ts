@@ -2,7 +2,8 @@
  * Indicators Module - Business Logic
  */
 
-import type { IndicatorsRepository } from "./repository";
+import { IndicatorsRepository } from "./repository";
+import { prisma } from "@/lib/db";
 import type { InventoryIndicators } from "./types";
 
 export class IndicatorsService {
@@ -21,4 +22,21 @@ export class IndicatorsService {
       frequentAdjustments,
     };
   }
+}
+
+/**
+ * Standalone factory function — preferred public API.
+ * Callers should use this instead of manually instantiating
+ * IndicatorsService + IndicatorsRepository.
+ *
+ * @example
+ * import { getInventoryIndicators } from "@/modules/indicators";
+ * const indicators = await getInventoryIndicators(orgId);
+ */
+export async function getInventoryIndicators(
+  orgId: string,
+): Promise<InventoryIndicators> {
+  const repo = new IndicatorsRepository(prisma);
+  const service = new IndicatorsService(repo);
+  return service.getInventoryIndicators(orgId);
 }

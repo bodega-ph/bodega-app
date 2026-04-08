@@ -2,8 +2,7 @@
  * Indicators Module - Public exports
  */
 
-export { IndicatorsService } from "./service";
-export { IndicatorsRepository } from "./repository";
+export { IndicatorsService, getInventoryIndicators } from "./service";
 export { IndicatorsApiError } from "./errors";
 
 export type {
