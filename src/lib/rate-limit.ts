@@ -8,7 +8,13 @@ const ipRequestCounts = new Map<string, RateLimitRecord>();
 // Periodic cleanup to prevent memory leaks
 const CLEANUP_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
-setInterval(() => {
+/**
+ * NOTE: This rate limiter is in-process only.
+ * In serverless / edge deployments each function instance has its own Map,
+ * so limits are NOT shared across instances. For production use, replace
+ * this with a shared store (e.g. Redis / Upstash).
+ */
+const cleanupTimer = setInterval(() => {
   const now = Date.now();
   for (const [ip, record] of ipRequestCounts.entries()) {
     if (record.resetAt < now) {
@@ -17,9 +23,14 @@ setInterval(() => {
   }
 }, CLEANUP_INTERVAL);
 
-// Prevent interval from keeping process alive
-if (typeof global !== "undefined" && "unref" in global) {
-  // Node.js environment - unref not available on setInterval return in all versions
+// Prevent the interval from keeping the Node.js process alive
+// when the server is shutting down gracefully.
+if (
+  typeof cleanupTimer === "object" &&
+  cleanupTimer !== null &&
+  "unref" in cleanupTimer
+) {
+  (cleanupTimer as { unref(): void }).unref();
 }
 
 export interface RateLimitResult {
@@ -32,7 +43,7 @@ export interface RateLimitResult {
 export function checkRateLimit(
   ip: string,
   limit = 5,
-  windowMs = 15 * 60 * 1000
+  windowMs = 15 * 60 * 1000,
 ): RateLimitResult {
   const now = Date.now();
   const record = ipRequestCounts.get(ip);
