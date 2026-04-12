@@ -11,15 +11,37 @@ interface OrganizationSettingsFormProps {
     name: string;
   };
   isLastOrg: boolean;
+  owner: {
+    id: string;
+    name: string | null;
+    email: string | null;
+  };
+  currentUserId: string;
+  members: Array<{
+    id: string;
+    name: string | null;
+    email: string | null;
+    role: "ORG_ADMIN" | "ORG_USER";
+    isOwner: boolean;
+  }>;
 }
 
-export default function OrganizationSettingsForm({ organization, isLastOrg }: OrganizationSettingsFormProps) {
+export default function OrganizationSettingsForm({
+  organization,
+  isLastOrg,
+  owner,
+  currentUserId,
+  members,
+}: OrganizationSettingsFormProps) {
   const [name, setName] = useState(organization.name);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [ownerConfirmText, setOwnerConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [targetOwnerId, setTargetOwnerId] = useState("");
   const [deleteDetails, setDeleteDetails] = useState<{
     items: number;
     locations: number;
@@ -28,6 +50,8 @@ export default function OrganizationSettingsForm({ organization, isLastOrg }: Or
   } | null>(null);
   const router = useRouter();
   const { update } = useSession();
+  const isOwner = owner.id === currentUserId;
+  const transferCandidates = members.filter((member) => member.id !== owner.id);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,7 +82,7 @@ export default function OrganizationSettingsForm({ organization, isLastOrg }: Or
     }
   }
 
-  async function handleDelete(force = false) {
+  async function handleDelete() {
     if (deleteConfirmText !== organization.name) {
       return;
     }
@@ -67,12 +91,10 @@ export default function OrganizationSettingsForm({ organization, isLastOrg }: Or
     setMessage(null);
 
     try {
-      const url = force
-        ? `/api/organizations/${organization.id}?force=true`
-        : `/api/organizations/${organization.id}`;
-
-      const res = await fetch(url, {
+      const res = await fetch(`/api/organizations/${organization.id}`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ownerConfirmation: ownerConfirmText }),
       });
 
       const data = await res.json();
@@ -81,7 +103,6 @@ export default function OrganizationSettingsForm({ organization, isLastOrg }: Or
       if (res.status === 409 && data.requiresConfirmation) {
         setDeleteDetails(data.details);
         setIsDeleting(false);
-        // Keep modal open to show confirmation
         return;
       }
 
@@ -105,6 +126,37 @@ export default function OrganizationSettingsForm({ organization, isLastOrg }: Or
       setIsDeleting(false);
       setShowDeleteModal(false);
       setDeleteDetails(null);
+    }
+  }
+
+  async function handleTransferOwnership() {
+    if (!targetOwnerId || !isOwner) {
+      return;
+    }
+
+    setIsTransferring(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/organizations/${organization.id}/ownership`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserId: targetOwnerId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage({ type: "error", text: data.error || "Failed to transfer ownership" });
+        return;
+      }
+
+      setMessage({ type: "success", text: "Ownership transferred successfully" });
+      setTargetOwnerId("");
+      router.refresh();
+    } catch {
+      setMessage({ type: "error", text: "An error occurred. Please try again." });
+    } finally {
+      setIsTransferring(false);
     }
   }
 
@@ -165,11 +217,45 @@ export default function OrganizationSettingsForm({ organization, isLastOrg }: Or
             type="button"
             variant="danger"
             onClick={() => setShowDeleteModal(true)}
+            disabled={!isOwner}
           >
-            Delete Organization
+            {isOwner ? "Delete Organization" : "Only owner can delete"}
           </Button>
         </div>
       )}
+
+      <div className="bg-zinc-900/40 backdrop-blur-3xl border border-white/5 rounded-2xl p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] space-y-4">
+        <h2 className="text-lg font-semibold text-white">Ownership</h2>
+        <p className="text-sm text-zinc-400">
+          Current owner: <span className="text-zinc-200">{owner.name ?? owner.email ?? "Unknown"}</span>
+        </p>
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-zinc-300">Transfer ownership</label>
+          <select
+            value={targetOwnerId}
+            onChange={(e) => setTargetOwnerId(e.target.value)}
+            disabled={!isOwner || isTransferring}
+            className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-inner disabled:opacity-60"
+          >
+            <option value="">Select member</option>
+            {transferCandidates.map((member) => (
+              <option key={member.id} value={member.id}>
+                {(member.name ?? member.email ?? "Unknown user") + (member.role === "ORG_ADMIN" ? " (Admin)" : "")}
+              </option>
+            ))}
+          </select>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              onClick={handleTransferOwnership}
+              disabled={!isOwner || !targetOwnerId || isTransferring}
+              loading={isTransferring}
+            >
+              Transfer Ownership
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* Info message for last org */}
       {isLastOrg && (
@@ -223,6 +309,16 @@ export default function OrganizationSettingsForm({ organization, isLastOrg }: Or
               placeholder={organization.name}
               className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500/50 mb-6 transition-all shadow-inner"
             />
+            <p className="text-sm text-zinc-400 mb-2">
+              Owner confirmation: type <span className="font-semibold text-white">DELETE</span>
+            </p>
+            <input
+              type="text"
+              value={ownerConfirmText}
+              onChange={(e) => setOwnerConfirmText(e.target.value)}
+              placeholder="DELETE"
+              className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500/50 mb-6 transition-all shadow-inner"
+            />
             <div className="flex gap-3 justify-end">
               <Button
                 type="button"
@@ -230,6 +326,7 @@ export default function OrganizationSettingsForm({ organization, isLastOrg }: Or
                 onClick={() => {
                   setShowDeleteModal(false);
                   setDeleteConfirmText("");
+                  setOwnerConfirmText("");
                   setDeleteDetails(null);
                 }}
                 disabled={isDeleting}
@@ -239,8 +336,8 @@ export default function OrganizationSettingsForm({ organization, isLastOrg }: Or
               <Button
                 type="button"
                 variant="danger"
-                onClick={() => handleDelete(deleteDetails ? true : false)}
-                disabled={deleteConfirmText !== organization.name || isDeleting}
+                onClick={handleDelete}
+                disabled={deleteConfirmText !== organization.name || ownerConfirmText !== "DELETE" || isDeleting || !isOwner}
                 loading={isDeleting}
               >
                 {deleteDetails ? "Delete All Data" : "Delete Organization"}

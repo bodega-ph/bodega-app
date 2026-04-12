@@ -7,6 +7,7 @@ interface Member {
   name: string | null;
   email: string | null;
   role: MembershipRole;
+  isOwner: boolean;
 }
 
 interface MemberListProps {
@@ -72,6 +73,11 @@ export default function MemberList({ members }: MemberListProps) {
                   <span className="text-white font-medium">
                     {member.name || "Unknown User"}
                   </span>
+                  {member.isOwner && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                      Owner
+                    </span>
+                  )}
                 </div>
               </td>
               <td className="py-4 text-sm text-zinc-400">{member.email}</td>

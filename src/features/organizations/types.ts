@@ -7,9 +7,12 @@ export type OrganizationRole = MembershipRole;
 
 export type {
   OrganizationMember,
+  OrganizationOwner,
   OrganizationDataCounts,
   UpdateOrganizationPayload,
   AddMemberPayload,
   DeleteOrganizationOptions,
   DeleteOrganizationResult,
+  TransferOwnershipPayload,
+  TransferOwnershipResult,
 } from "@/modules/organizations/types";
