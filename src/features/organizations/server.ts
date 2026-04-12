@@ -7,17 +7,22 @@ export {
   OrganizationsApiError,
   addMember,
   deleteOrganization,
+  getOrganizationOwner,
   getMembers,
   removeMember,
+  transferOwnership,
   updateMemberRole,
   updateOrganization,
 } from "@/modules/organizations";
 
 export type {
   OrganizationMember,
+  OrganizationOwner,
   OrganizationDataCounts,
   UpdateOrganizationPayload,
   AddMemberPayload,
   DeleteOrganizationOptions,
   DeleteOrganizationResult,
+  TransferOwnershipPayload,
+  TransferOwnershipResult,
 } from "@/modules/organizations";

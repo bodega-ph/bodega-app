@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getMembers } from "@/features/organizations/server";
+import { getMembers, getOrganizationOwner } from "@/features/organizations/server";
 import { MemberList, OrganizationSettingsForm } from "@/features/organizations";
 import { prisma } from "@/lib/db";
 
@@ -27,7 +27,14 @@ export default async function OrganizationSettingsPage({
   // Fetch all user memberships (needed for isLastOrg check and role validation)
   const memberships = await prisma.membership.findMany({
     where: { userId },
-    include: { organization: true },
+    include: {
+      organization: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
   });
 
   if (memberships.length === 0) {
@@ -49,6 +56,7 @@ export default async function OrganizationSettingsPage({
 
   // Fetch organization members via feature server module
   const members = await getMembers(orgId);
+  const owner = await getOrganizationOwner(orgId);
 
   return (
     <div className="min-h-screen bg-zinc-950 p-8">
@@ -71,6 +79,9 @@ export default async function OrganizationSettingsPage({
               name: membership.organization.name,
             }}
             isLastOrg={memberships.length === 1}
+            owner={owner}
+            currentUserId={userId}
+            members={members}
           />
 
           {/* Members Section */}

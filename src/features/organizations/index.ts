@@ -7,6 +7,9 @@ export type {
   DeleteOrganizationResult,
   OrganizationDataCounts,
   OrganizationMember,
+  OrganizationOwner,
   OrganizationRole,
+  TransferOwnershipPayload,
+  TransferOwnershipResult,
   UpdateOrganizationPayload,
 } from "./types";

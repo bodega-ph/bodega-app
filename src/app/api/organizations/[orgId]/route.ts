@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuthWithOrg } from "@/lib/api-auth";
 import {
   deleteOrganization,
+  getOrganizationOwner,
   OrganizationsApiError,
   updateOrganization,
 } from "@/features/organizations/server";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
 
 export async function PATCH(
   req: NextRequest,
@@ -24,8 +29,18 @@ export async function PATCH(
       );
     }
 
-    const body = await req.json();
-    const updatedOrg = await updateOrganization(requestedOrgId, body);
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    if (!isRecord(body) || typeof body.name !== "string") {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+
+    const updatedOrg = await updateOrganization(requestedOrgId, { name: body.name });
 
     return NextResponse.json({
       message: "Organization updated successfully",
@@ -63,12 +78,33 @@ export async function DELETE(
       );
     }
 
-    const url = new URL(req.url);
-    const force = url.searchParams.get("force") === "true";
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    if (!isRecord(body)) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+
+    if (
+      "ownerConfirmation" in body &&
+      typeof body.ownerConfirmation !== "string" &&
+      typeof body.ownerConfirmation !== "undefined"
+    ) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+
+    const ownerConfirmation =
+      typeof body.ownerConfirmation === "string" ? body.ownerConfirmation.trim() : undefined;
+
+    const owner = await getOrganizationOwner(requestedOrgId);
 
     const result = await deleteOrganization(requestedOrgId, {
       requesterUserId: userId,
-      force,
+      ownerConfirmation,
     });
 
     if (!result.deleted) {
@@ -76,6 +112,8 @@ export async function DELETE(
         {
           error: "Organization has existing data",
           requiresConfirmation: true,
+          ownerConfirmationRequired: true,
+          owner,
           details: result.details,
         },
         { status: 409 }

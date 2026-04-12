@@ -99,4 +99,5 @@ pids/
 .opencode/
 openspec/
 .gemini/
+.omg/
 .vercel

@@ -19,15 +19,28 @@ if (!canRunIntegrationTests) {
     const testLocationId = `test-location-${Date.now()}`;
 
     beforeEach(async () => {
-      await prisma.organization.create({
-        data: { id: testOrgId, name: "Test Org", slug: `test-org-${Date.now()}` },
-      });
-
       await prisma.user.create({
         data: {
           id: testUserId,
           email: `test-${Date.now()}@example.com`,
           name: "Test User",
+        },
+      });
+
+      await prisma.organization.create({
+        data: {
+          id: testOrgId,
+          name: "Test Org",
+          slug: `test-org-${Date.now()}`,
+          ownerId: testUserId,
+        },
+      });
+
+      await prisma.membership.create({
+        data: {
+          orgId: testOrgId,
+          userId: testUserId,
+          role: "ORG_ADMIN",
         },
       });
 
