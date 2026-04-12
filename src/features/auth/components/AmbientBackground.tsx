@@ -2,13 +2,20 @@
 
 import { useMemo } from "react";
 
+type AmbientCell = {
+  baseOpacity: number;
+  isPulsing: boolean;
+  pulseDelay: string;
+  colorIndex: 0 | 1 | 2;
+};
+
 export default function AmbientBackground() {
   // Generate a deterministic pattern for filled squares
   const gridCells = useMemo(() => {
     // Large enough to cover a 4k screen at 80px squares (50x30 = 1500 squares)
     const cols = 50;
     const rows = 30;
-    const cells = [];
+    const cells: AmbientCell[] = [];
     
     // A simple pseudo-random function so it's consistent between renders
     const pseudoRandom = (seed: number) => {
@@ -30,7 +37,7 @@ export default function AmbientBackground() {
       const baseOpacity = isFilled ? 0.01 + pseudoRandom(i) * 0.02 : 0;
       
       // Select a deterministic brand color index (0: Blue, 1: Indigo, 2: Cyan)
-      const colorIndex = Math.floor(pseudoRandom(i + 300) * 3);
+      const colorIndex = Math.floor(pseudoRandom(i + 300) * 3) as AmbientCell["colorIndex"];
       
       cells.push({
         baseOpacity,
@@ -47,14 +54,14 @@ export default function AmbientBackground() {
     'hover:bg-blue-500/[0.15]',
     'hover:bg-indigo-500/[0.15]',
     'hover:bg-cyan-500/[0.15]'
-  ];
+  ] as const;
 
   // Base RGB values for the static opacities
   const staticColors = [
     '59, 130, 246', // blue-500
     '99, 102, 241', // indigo-500
     '6, 182, 212'   // cyan-500
-  ];
+  ] as const;
 
   return (
     <div className="hidden lg:flex flex-1 relative items-center justify-center overflow-hidden border-l border-white/5 bg-zinc-950">
